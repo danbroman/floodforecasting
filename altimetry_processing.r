@@ -35,4 +35,3 @@ alt_dt = alt_dt %>% data.table() %>% dplyr::mutate(date = nasa_base_date + timda
 #output processed files
 write.csv(alt_dt, paste0(dir_dat, run_name, '.csv'), row.names = F)
 saveRDS(alt_dt, paste0(dir_dat, run_name, '.rda'))
-saveRDS(alt_dt, paste0(dir_dat, run_name, '.rda'))
