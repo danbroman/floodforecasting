@@ -22,13 +22,15 @@ date_ref$date_ind = 0:(nrow(date_ref) - 1)
 stage_dat = NULL
 for(i in 1:length(stage_list)){
 	sta_id_temp = file_path_sans_ext(stage_list[i])
-	nc_temp = nc_open(paste0(dir_raw, stage_list[i]))
-	stage_temp = ncvar_get(nc_temp, 'level')
-	qc_temp = ncvar_get(nc_temp, 'QC')
-	date_temp = ncvar_get(nc_temp, 'date')
+	nc_temp = try(nc_open(paste0(dir_raw, stage_list[i])))
+	if(length(nc_temp) > 1){
+		stage_temp = ncvar_get(nc_temp, 'level')
+		qc_temp = ncvar_get(nc_temp, 'QC')
+		date_temp = ncvar_get(nc_temp, 'date')
 
-	stage_dat_temp = data.table(sta_id = sta_id_temp, date_ind = date_temp, flag = qc_temp, stage = stage_temp)
-	stage_dat = rbind_list(stage_dat, stage_dat_temp)
+		stage_dat_temp = data.table(sta_id = sta_id_temp, date_ind = date_temp, flag = qc_temp, stage = stage_temp)
+		stage_dat = rbind_list(stage_dat, stage_dat_temp)
+	}
 }
 stage_dat = stage_dat %>% left_join(date_ref) %>% dplyr::select(-date_ind)
 #output processed files
