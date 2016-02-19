@@ -21,12 +21,21 @@ fcst_start_date = '2015-06-15'
 fcst_end_date = '2015-10-31'
 fcst_leads = 0:15
 fcst_sta_ids = c('007-mgd4ptn', '002-MGD4PTN', '006-mgd4ptn', '005-mgd4ptn', '004-MGD4PTN', '029-mgd5ptn', '024-MGD4PTN', '023-mgd4ptn', '022-mgd4ptn', '025-mgd4ptn', '019-mgd4ptn', '001-MGD4PTN', '015-mgd4ptn')
-dir_fcst = ''
-run_name = ''
-##process data 
-fcst_dates = seq(from = as.Date(fcst_start_date), to = as.Date(fcst_end_date), by = 'day')
-fcst_tbl = data.table(sta_id = rep(fcst_sta_ids, each = length(fcst_dates) * length(fcst_leads)), fcst_date = fcst_dates, fcst_lead = rep(fcst_leads, each = length(fcst_dates)))
+dir_dat = '/Volumes/gonggong/flood forecasting/data/'
+dir_ref = '/Volumes/gonggong/flood forecasting/data/reference tables/'
+dir_fcst = '/Volumes/gonggong/flood forecasting/data/'
+run_name = 'bagmati-kosi'
+npts_thresh = 20
+nse_thresh = 0.1
 
+##read in data
+stage_dat = readRDS(paste0(dir_dat, 'stage.rda'))
+rating_curve_tbl = readRDS(paste0(dir_dat, 'rating_curve_stage-bagmati-kosi.rda'))
+stage_weight_tbl = readRDS(file.path(dir_ref, 'stage_weight_tbl.rda')) 
+
+##process data 
+stage_dat_day = stage_dat %>% dplyr::filter(hour %in% c(6:18)) %>% dplyr::mutate(hour_min = hour - 12) %>% group_by(year, month, day, sta_id) %>% dplyr::slice(which.min(hour_min)) %>% ungroup() %>% dplyr::select(date, sta_id, basin, stage) %>% dplyr::mutate(date = as.Date(date)) %>% data.table() 
+rating_curve_tbl = rating_curve_tbl %>% dplyr::filter(nse >= nse_thresh, npts > npts_thresh)
 ##forecast
 stage_fcst_tbl = NULL
 for(j in 1:nrow(fcst_tbl)){
@@ -51,4 +60,4 @@ for(j in 1:nrow(fcst_tbl)){
 }
 
 #save data
-saveRDS(stage_fcst_tblpaste0(dir_fcst, run_name, '_fcst.rda'))
+saveRDS(stage_fcst_tbl, paste0(dir_fcst, 'stage_fcst.rda'))
