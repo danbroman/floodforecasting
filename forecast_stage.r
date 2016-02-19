@@ -43,11 +43,7 @@ for(j in 1:nrow(fcst_tbl)){
 	}
 
 	stage_fcst = stage_fcst %>% dplyr::mutate(stage_fcst_uw = C * (stage + a)^n, wt = 1 / err) %>% dplyr::filter(!is.na(stage_fcst_uw)) %>% dplyr::mutate(stage_fcst = stage_fcst_uw * wt)
-
 	stage_fcst = stage_fcst %>% group_by(sta_id) %>% dplyr::slice(which.max(nse)) %>% ungroup()
-	# stage_fcst$fcst_date = fcst_date_temp
-	# stage_fcst$fcst_lead = fcst_lead_temp
-	# stage_fcst_diag = bind_rows(stage_fcst_diag, stage_fcst)
 	stage_fcst_best = sum(stage_fcst$stage_fcst) / sum(stage_fcst$wt)
 	stage_fcst_temp = data.table(sta_id = fcst_sta_id_temp, stage_fcst = stage_fcst_best, fcst_lead = fcst_lead_temp, fcst_date = fcst_date_temp)
 
