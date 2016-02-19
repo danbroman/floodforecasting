@@ -1,7 +1,7 @@
 #######DESCRIPTION###############################
-#uses stage-stage fitted rating curves to produce 0-15 day lead
+#uses stage-discharge fitted rating curves to produce 0-15 day lead
 #forecasts of stage
-#requires fitted rating curves from stage_ratingcurve_stage_fit.r 
+#requires fitted rating curves from stage_ratingcurvefit.r 
 #observed stage values
 #################################################
 ##load libraries
