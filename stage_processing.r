@@ -14,7 +14,9 @@ library(tools)
 dir_raw = '/Volumes/gonggong/flood forecasting/data/raw/stage/'
 #output location
 dir_dat = '/Volumes/gonggong/flood forecasting/data/'
-#process raw files
+#quality control flag - see qc_reference for a description of the flag values and methods
+qc_thresh = 90
+##process raw files
 stage_list = list.files(paste0(dir_raw), pattern = '.nc')
 date_ref = as.POSIXct('2000-01-01 00:00:00', "%Y-%m-%d %H:%M:%S", tz = 'GMT')
 date_ref = data.table(date = seq(from = as.POSIXct('2000-01-01 00:00:00'), to = as.POSIXct(Sys.Date()), by = 'min'))
@@ -32,7 +34,7 @@ for(i in 1:length(stage_list)){
 		stage_dat = rbind_list(stage_dat, stage_dat_temp)
 	}
 }
-stage_dat = stage_dat %>% left_join(date_ref) %>% dplyr::select(-date_ind)
+stage_dat = stage_dat %>% left_join(date_ref) %>% dplyr::select(-date_ind) %>% dplyr::filter(flag >= qc_thresh)
 #output processed files
 write.csv(stage_dat, paste0(dir_dat, 'stage.csv'), row.names = F)
 saveRDS(stage_dat, paste0(dir_dat, 'stage.csv'))
