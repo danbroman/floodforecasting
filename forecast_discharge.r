@@ -15,6 +15,8 @@ library(hydroGOF)
 library(R.utils)
 library(scales)
 library(RColorBrewer)
+library(foreach)
+library(doParallel)
 
 ##user inputs
 fcst_start_date = '2015-06-15'
@@ -42,8 +44,9 @@ fcst_dates = seq(from = as.Date(fcst_start_date), to = as.Date(fcst_end_date), b
 fcst_tbl = data.table(sta_id = rep(fcst_sta_ids, each = length(fcst_dates) * length(fcst_leads)), fcst_date = fcst_dates, fcst_lead = rep(fcst_leads, each = length(fcst_dates)))
 
 ##forecast
-Q_fcst_tbl = NULL
-for(j in 1:nrow(fcst_tbl)){
+cl = makeCluster(7)
+registerDoParallel(cl)
+Q_fcst_ls = foreach(j = 1:nrow(fcst_tbl)) %dopar% {
 	fcst_lead_temp = fcst_tbl$fcst_lead[j]
 	fcst_date_temp = fcst_tbl$fcst_date[j]
 	fcst_sta_id_temp = fcst_tbl$sta_id[j]
@@ -59,11 +62,16 @@ for(j in 1:nrow(fcst_tbl)){
 
 	Q_fcst = Q_fcst %>% dplyr::mutate(Q_fcst_uw = C * (stage + a)^n, wt = 1 / err) %>% dplyr::filter(!is.na(Q_fcst_uw)) %>% dplyr::mutate(Q_fcst = Q_fcst_uw * wt)
 	Q_fcst = Q_fcst %>% group_by(sta_id) %>% dplyr::slice(which.max(nse)) %>% ungroup()
-	Q_fcst_best = sum(Q_fcst$Q_fcst) / sum(Q_fcst$wt)
-	Q_fcst_temp = data.table(sta_id = fcst_sta_id_temp, Q_fcst = Q_fcst_best, fcst_lead = fcst_lead_temp, fcst_date = fcst_date_temp)
+	Q_fcst$fcst_date = fcst_date_temp
+	Q_fcst$fcst_lead = fcst_lead_temp
+	Q_fcst
+	# Q_fcst_best = sum(Q_fcst$Q_fcst) / sum(Q_fcst$wt)
+	# Q_fcst_temp = data.table(sta_id = fcst_sta_id_temp, Q_fcst = Q_fcst_best, fcst_lead = fcst_lead_temp, fcst_date = fcst_date_temp)
 
-	Q_fcst_tbl = bind_rows(Q_fcst_tbl, Q_fcst_temp)
+	# Q_fcst_tbl = bind_rows(Q_fcst_tbl, Q_fcst_temp)
 }
+stopCluster(cl)
+Q_fcst_diag_tbl = do.call('bind_rows', Q_fcst_ls)
 
 Q_stage_fcst_tbl = Q_fcst_tbl %>% left_join(rating_curve_opt_tbl) %>% dplyr::mutate(stage_fcst = (Q_fcst / C) ^ (1 / n) - a)
 #save data
