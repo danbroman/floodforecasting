@@ -30,7 +30,7 @@ nc_close(nc_temp)
 
 width_dt_brahm_date = width_dt_brahm_date - idl_jd_base
 width_dt_brahm_date = as.Date(width_dt_brahm_date, origin = as.Date('2000-01-01'))
-width_dt_brahm_dt = data.table(val = as.numeric(width_dt_brahm), AreaID = rep(width_dt_brahm_id, each = length(width_dt_brahm_date)), date = width_dt_brahm_date, qc = as.numeric(width_dt_ganges_qc)) %>% dplyr::filter(!is.na(val))
+width_dt_brahm_dt = data.table(val = as.numeric(width_dt_brahm), AreaID = rep(width_dt_brahm_id, each = length(width_dt_brahm_date)), date = width_dt_brahm_date, qc = as.numeric(width_dt_brahm_qc)) %>% dplyr::filter(!is.na(val))
 
 nc_temp = nc_open(file.path(dir_raw, 'Ganges_all.nc'))
 width_dt_ganges = ncvar_get(nc_temp, 'river_data')
